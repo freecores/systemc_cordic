@@ -19,7 +19,6 @@
 #include "decoder.h"
 #include "cordpipe.h"
 #include "adjust.h"
-#include "resultfifo.h"
 #include "monitor.h"
 #include "opcode.h"
 #include "table.h"
@@ -63,14 +62,7 @@ int sc_main(int argc, char* argv[]) {
     sc_signal<short> pipe_acc_phase;
     sc_signal<short> pipe_desired_phase;
     sc_signal<sc_uint<UNIT_SEL_WIDTH> > pipe_opcode;
-   
-    // result fifo
-    sc_signal<bool> fifo_read_request;
-    sc_signal<bool> fifo_out_valid;
-    sc_signal<sc_uint<UNIT_SEL_WIDTH> > fifo_out_opcode;
-    sc_signal<short> fifo_out_result1;
-    sc_signal<short> fifo_out_result2;
-
+    
     // constants to parametrize pipeline module on system reset
     sc_signal<short> stage0;
     sc_signal<short> stage1;
@@ -124,10 +116,6 @@ int sc_main(int argc, char* argv[]) {
     testbench1.result1(result1);
     testbench1.result2(result2);
     testbench1.monitor_idle(monitor_idle);
-    testbench1.fifo_valid(fifo_out_valid);
-    testbench1.fifo_opcode(fifo_out_opcode); 
-    testbench1.fifo_result1(fifo_out_result1);
-    testbench1.fifo_result2(fifo_out_result2);
       // outputs
     testbench1.instructions_valid(instruction_valid);  
     testbench1.done(powerdown); 
@@ -136,8 +124,7 @@ int sc_main(int argc, char* argv[]) {
     testbench1.operand1(operand1);
     testbench1.operand2(operand2);
     testbench1.operand3(operand3);
-    testbench1.fifo_read_request(fifo_read_request);
- 
+
     // instantiate decoder
     decoder decoder1("decoder");
     decoder1.clk(CLOCK);
@@ -223,26 +210,10 @@ int sc_main(int argc, char* argv[]) {
     adjust1.in_acc_phase(pipe_acc_phase);
     adjust1.in_opcode(pipe_opcode);
       // output
-    adjust1.result_valid(compute_done);	// compute_done
-    adjust1.out_opcode(adjust_opcode);	// adjust_opcode
-    adjust1.out_result1(result1);	// result1
-    adjust1.out_result2(result2);	// result2
-
-    // instantiate result fifo
-    resultfifo resultfifo1("resultfifo1");
-    resultfifo1.clk(CLOCK);
-    resultfifo1.reset(reset);
-        // inputs
-    resultfifo1.read_request(fifo_read_request);
-    resultfifo1.write_request(compute_done);
-    resultfifo1.in_opcode(adjust_opcode); 	
-    resultfifo1.in_result1(result1); 	
-    resultfifo1.in_result2(result2); 	
-        // outputs
-    resultfifo1.out_valid(fifo_out_valid);
-    resultfifo1.out_opcode(fifo_out_opcode);
-    resultfifo1.out_result1(fifo_out_result1);
-    resultfifo1.out_result2(fifo_out_result2);
+    adjust1.result_valid(compute_done);
+    adjust1.out_opcode(adjust_opcode);
+    adjust1.out_result1(result1);
+    adjust1.out_result2(result2);
 
     // instantiate monitor unit
     monitor monitor1("monitor1");
@@ -250,10 +221,10 @@ int sc_main(int argc, char* argv[]) {
     monitor1.reset(reset);
       // inputs
     monitor1.start(start_monitor);
-    monitor1.in_valid(compute_done);	// compute_done
-    monitor1.in_opcode(adjust_opcode);	// adjust_opcode
-    monitor1.in_result1(result1);	// result1
-    monitor1.in_result2(result2);	// result2
+    monitor1.in_valid(compute_done);
+    monitor1.in_opcode(adjust_opcode);
+    monitor1.in_result1(result1);
+    monitor1.in_result2(result2);
     monitor1.idle(monitor_idle);
 
     // create trace file

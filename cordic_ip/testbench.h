@@ -29,12 +29,6 @@ SC_MODULE(testbench) {
     sc_in<short> result2;
     sc_in<bool> monitor_idle;
 
-    // Input ports from result fifo
-    sc_in<bool> fifo_valid;
-    sc_in<sc_uint<UNIT_SEL_WIDTH> > fifo_opcode;
-    sc_in<short> fifo_result1;
-    sc_in<short> fifo_result2;
-
     // Output ports Declaration
     sc_out<bool> instructions_valid;
     sc_out<bool> done;
@@ -46,19 +40,14 @@ SC_MODULE(testbench) {
     sc_out<short> operand2;
     sc_out<short> operand3;
 
-    // Output to result fifo
-    sc_out<bool> fifo_read_request;
-    
     // Declare implementation functions
     void testbench_process();
-    void readfifo_process();
 
     // Constructor
     SC_CTOR(testbench)
     {
         // Register processes and define active clock edge
         SC_CTHREAD(testbench_process, clk.pos());
-        SC_CTHREAD(readfifo_process, clk.pos());
 
         // Watching for global reset
         watching(reset.delayed()==true);

@@ -1,3 +1,5 @@
+Your license(s) for feature `SystemCSim' expire within 5 days.
+WARNING: Default time step is used for VCD tracing.
 [testbench] Testbench for CORDIC engines
 [cordic00] NOP
 [cordic01] NOP
