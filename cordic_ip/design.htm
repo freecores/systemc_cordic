@@ -1,0 +1,121 @@
+<HTML>
+<HEAD><TITLE>SystemC CORDIC design</TITLE></HEAD>
+
+<BODY BGCOLOR=white>
+<H2><B>SystemC CORDIC design</B></H2>
+Team Members:<br><br>
+Winnie Cheng (wwcheng@stanfordalumni.org)<br>
+Peter Wu (peter5@stanford.edu)<br>
+<br>
+<H3><I>Overview</I></H3>
+CORDIC stands for <B>CO</B>ordinate <B>R</B>otation <B>DI</B>gital <B>C</B>omputer. It is an inexpensive way of performing some vector-based and trignometric computations. CORDIC revolves around the idea of rotation. It is particularly useful in designs where multipliers are not available. CORDIC computes values based on rotating vectors by powers of 2, therefore, only simple shifters and adders are needed. In addition, the iterative nature of the algorithm lends itself to an efficient pipeline implementation.<BR><BR>
+<BR>
+
+<H3><I>Design Functionalities</I></H3>
+We have decided to support the following features in our CORDIC implementation:<BR><BR>
+<li>computes rotate(x, y, angle)</li>
+<li>computes magnitude(x, y)</li>
+<li>computes phase(x, y)</li>
+<li>computes sin(angle)</li>
+<li>computes cos(angle)</li>
+<li>computes sinh(angle)</li>
+<li>computes cosh(angle)</li>
+<li>14-stage fully pipelined design</li>
+<li>power-save detection on pipeline - pipeline shuts off when certain number of idle cycles have elapsed</li>
+<BR>
+<BR>
+<BR>
+<H3><I>Design Interface</I></H3>
+Our CORDIC core consists of the following blocks:<br><br>
+<li>Instruction Decoding Unit (decoder)</li>
+<li>CORDIC 12-stage pipeline (cordpipe - encapsulates 12 instances of basic cordic unit)</li>
+<li>Pipeline Output Adjustment Unit (adjust)</li>
+<br><br>
+<pre>
+            _________     __________________________________     __________
+           |         |   |  ________   cordpipe   ________  |   |          |
+   opcode->|         |   | |        |            |        | |   |          |->out_opcode
+           |         |   | |        |            |        | |   |          |
+ operand1->| decoder |<->| | cordic |   ......   | cordic | |<->|  adjust  |->result1
+ operand2->| (1-stg) |   | |  (s0)  | 12 stages  |  (s11) | |   |  (1-stg) |->result2
+ operand3->|         |   | |        |            |        | |   |          |
+           |         |   | |________|            |________| |   |          |
+           |_________|   |__________________________________|   |__________|        
+
+</pre>
+The CORDIC core accepts an instruction at the decoder interface. The Decoder module interprets the instruction type, performs pre-computation on the operands and sets up the pipeline to handle the instruction accordingly. The Decoder module has a latency of one cycle. Next, the pipeline unit is activated. It is a 12-stage pipeline consisting of identical submodules called "cordic" that have been parametrized accordingly to their location in the pipeline. When processing reaches the end of the pipeline, the "adjust" module performs some post-computation according to the instruction type and outputs the result. The Adjust module has a latency of one cycle. Therefore, the latency of the core is 14 cycles.<BR>
+<BR>
+<b>Inputs:</b>
+<pre>
+- clock (1-bit): system clock
+- reset (1-bit): system reset
+- start (1-bit): enables CORDIC unit
+- instruction_valid (1-bit): indicates input instruction is valid
+- opcode (4-bit): instruction opcode indicates which operation to feed into pipeline
+- operand1 (16-bit): instruction operand (fixed-point representation)
+- operand2 (16-bit): instruction operand (fixed-point representation)
+- operand3 (16-bit): instruction operand (fixed-point representation)
+</pre>
+<b>Outputs:</b>
+<pre>
+- result_valid (1-bit): indicates result at end of pipeline is valid
+- out_opcode (4-bit): associated opcode for result at end of pipeline
+- out_result1 (16-bit): output result1 at end of pipeline (fixed-point representation)
+- out_result2 (16-bit): output result2 at end of pipeline (fixed-point representation)
+</pre>
+<b>Instruction Format:</b>
+<pre>
+(1) Rotate function	
+	syntax: rot x y a
+	arguments:
+		operand1 - original x-coordinate of vector
+		operand2 - original y-coordinate of vector
+        	operand3 - angle in deg to rotate original vector by
+	return values:
+		result1 - x-coordinate of vector rotated by angle a
+		result2 - y-coordinate of vector rotated by angle a
+		
+(2) Magnitude-and-Phase function
+	syntax: mgp x y
+	arguments:
+		operand1 - x-coordinate of vector
+		operand2 - y-coordinate of vector
+	return values:
+		result1 - magnitude of vector(x,y)
+		result2 - phase of vector(x,y)
+
+(3) Sin-and-Cos function
+	syntax: sin a 
+		cos b 	
+	arguments:
+		operand1 - angle in deg
+	return values:
+		result1 - sine of angle a
+		result2 - cosine of angle a
+
+(4) Sinh-and-Cosh function
+	syntax: sinh a
+		cosh a
+	arguments:
+		operand1 - angle in deg
+	return values:
+		result1 - sinh of angle a
+		result2 - cosh of angle a
+
+</pre>	
+
+<BR>
+<H3><I>Testbench</I></H3>
+The testbench is described in the "testbench" module and the "monitor" module. The testbench supports a user defined instruction file that adheres to the syntax of the instruction format. It also supports the generation of random inputs. It uses the C math libraries to compute expected values to verify results at runtime. The testbench executes the following tests:<br><br>
+<li>random inputs to exercise large test set on rotate function</li>
+<li>random inputs to exercise large test set on magnitude and phase functions</li>
+<li>random inputs to exercise large test set on sin and cos functions</li>
+<li>random inputs to exercise large test set on sinh and cosh functions</li>
+<li>pipeline operated as non-pipelined mode (NOP stalls)</li>
+<li>fully pipelined mode with interleaved user defined instructions</li>
+<li>idle period to test pipeline power-save activation</li>
+<BR><BR>
+<hr>
+<H5><I>May 25, 2003</I></H5>
+</BODY>
+</HTML>

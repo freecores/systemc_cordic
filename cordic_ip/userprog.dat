@@ -1,0 +1,24 @@
+sin -155
+cos -28
+sin 75
+cos -16
+sin 91
+mgp 70 40
+mgp 90 68
+mgp 82 -18
+mgp -12 -54
+mgp 54 -18
+cosh 26
+sinh -29
+cosh 33
+sinh -10
+cosh -43
+rot 39 28 69
+rot 62 6 -122
+rot 54 53 172
+rot 87 91 121
+rot 15 56 -69
+sin -155
+cosh 26
+mgp 70 40
+rot 15 56 -69
